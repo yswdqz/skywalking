@@ -52,11 +52,11 @@ public class DatabaseSlowStatementBuilder {
     @Setter
     private long timeBucket;
 
-    public void prepare() {
+    void prepare() {
         this.serviceName = namingControl.formatServiceName(serviceName);
     }
 
-    public DatabaseSlowStatement toDatabaseSlowStatement() {
+    DatabaseSlowStatement toDatabaseSlowStatement() {
         DatabaseSlowStatement dbSlowStat = new DatabaseSlowStatement();
         dbSlowStat.setId(id);
         dbSlowStat.setTraceId(traceId);
