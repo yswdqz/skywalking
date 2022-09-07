@@ -159,7 +159,23 @@ public class DSLTest {
                     "    }\n" +
                     "  }\n" +
                     "}\n",
+                },
+            new String[] {
+                    "slowSql",
+                    "filter {\n" +
+                    "        json{\n" +
+                    "        }\n" +
+                    "        slowSql {\n" +
+                    "          serviceName parsed.service as String\n" +
+                    "          id parsed.id as String\n" +
+                    "          statement parsed.statement as String\n" +
+                    "          latency parsed.query_time as Long\n" +
+                    "          layer parsed.layer as String\n" +
+                    "          timeBucket parsed.time as Long\n" +
+                    "        }\n" +
+                    "      }"
                 }
+
         );
     }
 
