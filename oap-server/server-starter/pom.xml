@@ -39,6 +39,14 @@
             <version>${project.version}</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>org.graalvm.nativeimage</groupId>
+            <artifactId>svm</artifactId>
+            <scope>provided</scope>
+            <version>22.3.1</version>
+        </dependency>
+
         <!-- OAL runtime core -->
         <dependency>
             <groupId>org.apache.skywalking</groupId>
@@ -285,26 +293,6 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>application.yml</exclude>
-                        <exclude>log4j2.xml</exclude>
-                        <exclude>alarm-settings.yml</exclude>
-                        <exclude>component-libraries.yml</exclude>
-                        <exclude>gateways.yml</exclude>
-                        <exclude>service-apdex-threshold.yml</exclude>
-                        <exclude>endpoint-name-grouping.yml</exclude>
-                        <exclude>metadata-service-mapping.yaml</exclude>
-                        <exclude>trace-sampling-policy-settings.yml</exclude>
-                        <exclude>oal/</exclude>
-                        <exclude>fetcher-prom-rules/</exclude>
-                        <exclude>envoy-metrics-rules/</exclude>
-                        <exclude>meter-analyzer-config/</exclude>
-                        <exclude>openapi-definitions/</exclude>
-                        <exclude>otel-rules/</exclude>
-                        <exclude>ui-initialized-templates/</exclude>
-                        <exclude>zabbix-rules/</exclude>
-                        <exclude>lal/</exclude>
-                        <exclude>log-mal-rules/</exclude>
-                        <exclude>telegraf-rules/</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -353,4 +341,72 @@
             </plugin>
         </plugins>
     </build>
+
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>0.9.21</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <mainClass>org.apache.skywalking.oap.server.starter.OAPServerStartUp</mainClass>
+                            <metadataRepository>
+                                <enabled>true</enabled>
+                            </metadataRepository>
+
+                            <agent>
+                                <enabled>true</enabled>
+                                <options>
+                                    <enableExperimentalPredefinedClasses>true</enableExperimentalPredefinedClasses>
+                                </options>
+                            </agent>
+<!--                            <classpath>-->
+<!--                                <param>${project.build.directory}/oap-libs/*</param>-->
+<!--                                <param>${project.build.directory}/skywalking-oap.jar</param>-->
+<!--                            </classpath>-->
+                            <useArgFile>true</useArgFile>
+                        </configuration>
+                    </plugin>
+<!--                    <plugin>-->
+<!--                        <groupId>org.codehaus.mojo</groupId>-->
+<!--                        <artifactId>exec-maven-plugin</artifactId>-->
+<!--                        <version>3.0.0</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>java-agent</id>-->
+<!--                                <goals>-->
+<!--                                    <goal>exec</goal>-->
+<!--                                </goals>-->
+<!--                                <phase>test</phase>-->
+<!--                                <configuration>-->
+<!--                                    <executable>java</executable>-->
+<!--                                    <workingDirectory>${project.build.directory}</workingDirectory>-->
+<!--                                    <arguments>-->
+<!--                                        <argument>-classpath</argument>-->
+<!--                                        <classpath/>-->
+<!--                                        <argument>org.apache.skywalking.oap.server.starter.OAPServerStartUp</argument>-->
+<!--                                    </arguments>-->
+<!--                                </configuration>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

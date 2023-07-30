@@ -17,4 +17,4 @@
 #
 
 
-org.apache.skywalking.oap.server.receiver.envoy.EnvoyMetricReceiverModule
+#org.apache.skywalking.oap.server.receiver.envoy.EnvoyMetricReceiverModule

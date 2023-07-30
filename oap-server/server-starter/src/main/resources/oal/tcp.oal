@@ -16,17 +16,3 @@
  *
  */
 
-// TCP services' metrics
-service_throughput_received = from(TCPService.receivedBytes).longAvg();
-service_throughput_sent = from(TCPService.sentBytes).longAvg();
-service_relation_client_received = from(TCPServiceRelation.receivedBytes).filter(detectPoint == DetectPoint.CLIENT).longAvg();
-service_relation_client_sent = from(TCPServiceRelation.sentBytes).filter(detectPoint == DetectPoint.CLIENT).longAvg();
-service_relation_server_received = from(TCPServiceRelation.receivedBytes).filter(detectPoint == DetectPoint.SERVER).longAvg();
-service_relation_server_sent = from(TCPServiceRelation.sentBytes).filter(detectPoint == DetectPoint.SERVER).longAvg();
-
-service_instance_throughput_received = from(TCPServiceInstance.receivedBytes).longAvg();
-service_instance_throughput_sent = from(TCPServiceInstance.sentBytes).longAvg();
-service_instance_relation_client_received = from(TCPServiceInstanceRelation.receivedBytes).filter(detectPoint == DetectPoint.CLIENT).longAvg();
-service_instance_relation_client_sent = from(TCPServiceInstanceRelation.sentBytes).filter(detectPoint == DetectPoint.CLIENT).longAvg();
-service_instance_relation_server_received = from(TCPServiceInstanceRelation.receivedBytes).filter(detectPoint == DetectPoint.SERVER).longAvg();
-service_instance_relation_server_sent = from(TCPServiceInstanceRelation.sentBytes).filter(detectPoint == DetectPoint.SERVER).longAvg();

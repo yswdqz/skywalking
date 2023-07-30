@@ -18,25 +18,21 @@
 
 package org.apache.skywalking.oap.meter.analyzer.prometheus.rule;
 
-import java.io.File;
+import java.io.*;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.*;
 
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import java.util.stream.Stream;
 
+import com.oracle.svm.core.annotate.Substitute;
 import org.apache.skywalking.oap.server.core.UnexpectedException;
+import org.apache.skywalking.oap.server.library.util.NativeImageUtils;
 import org.apache.skywalking.oap.server.library.util.ResourceUtils;
 
 import org.slf4j.Logger;
@@ -54,9 +50,7 @@ public class Rules {
     }
 
     public static List<Rule> loadRules(final String path, List<String> enabledRules) throws IOException {
-
-        final Path root = ResourceUtils.getPath(path);
-
+        List<Rule> rules;
         Map<String, Boolean> formedEnabledRules = enabledRules
                 .stream()
                 .map(rule -> {
@@ -70,18 +64,22 @@ public class Rules {
                     return rule;
                 })
                 .collect(Collectors.toMap(rule -> rule, $ -> false));
-        List<Rule> rules;
+        if (NativeImageUtils.isNativeImage()) {
+            return loadRulesNative(formedEnabledRules,path);
+        }
+        final Path root = ResourceUtils.getPath(path);
+
         try (Stream<Path> stream = Files.walk(root)) {
             rules = stream
                     .filter(it -> formedEnabledRules.keySet().stream()
-                                    .anyMatch(rule -> {
-                                        boolean matches = FileSystems.getDefault().getPathMatcher("glob:" + rule)
-                                                .matches(root.relativize(it));
-                                        if (matches) {
-                                            formedEnabledRules.put(rule, true);
-                                        }
-                                        return matches;
-                                    }))
+                            .anyMatch(rule -> {
+                                boolean matches = FileSystems.getDefault().getPathMatcher("glob:" + rule)
+                                        .matches(root.relativize(it));
+                                if (matches) {
+                                    formedEnabledRules.put(rule, true);
+                                }
+                                return matches;
+                            }))
                     .map(pathPointer -> {
                         // Use relativized file path without suffix as the rule name.
                         String relativizePath = root.relativize(pathPointer).toString();
@@ -115,6 +113,62 @@ public class Rules {
             return rule;
         } catch (IOException e) {
             throw new UnexpectedException("Load rule file" + file.getName() + " failed", e);
+        }
+    }
+    public static List<Rule> loadRulesNative(Map<String, Boolean> formedEnabledRules, String path) {
+        List<Rule> rules = null;
+        ClassLoader classLoader = ResourceUtils.class.getClassLoader();
+        try (FileSystem fileSystem = FileSystems.newFileSystem(URI.create("resource:/"), Map.of(), classLoader)) {
+            Path p = fileSystem.getPath(path);
+            try (Stream<Path> stream = Files.walk(p)) {
+                rules = stream
+                        .filter(it -> formedEnabledRules.keySet().stream()
+                                .anyMatch(rule -> {
+                                    boolean matches = FileSystems.getDefault().getPathMatcher("glob:" + rule)
+                                            .matches(p.relativize(it));
+                                    if (matches) {
+                                        formedEnabledRules.put(rule, true);
+                                    }
+                                    return matches;
+                                }))
+                        .map(pathPointer -> {
+                            // Use relativized file path without suffix as the rule name.
+                            String relativizePath = p.relativize(pathPointer).toString();
+                            String ruleName = relativizePath.substring(0, relativizePath.lastIndexOf("."));
+
+                            return getRulesFromFileNative(ruleName, pathPointer, fileSystem);
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()) ;
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return rules;
+    }
+    private static Rule getRulesFromFileNative(String ruleName, Path path, FileSystem fileSystem) {
+        if (!Files.isRegularFile(path)) {
+            return null;
+        }
+        Set<StandardOpenOption> permissions = Collections.singleton(StandardOpenOption.READ);
+        String content = null;
+        try (SeekableByteChannel channel = fileSystem.provider().newFileChannel(path, permissions)) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate((int) channel.size());
+            channel.read(byteBuffer);
+            content = new String(byteBuffer.array());
+            Rule rule = new Yaml().loadAs(content, Rule.class);
+            if (rule == null) {
+                return null;
+            }
+            rule.setName(ruleName);
+            return rule;
+        } catch (IOException e) {
+            System.out.println("出错了");
+            throw new UnexpectedException("Load rule file failed", e);
         }
     }
 }
