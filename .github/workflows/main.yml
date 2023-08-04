@@ -1,0 +1,35 @@
+name: GraalVM Community Edition build
+on:
+  push:
+    branches:
+      - native-image
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17.0.8'
+          distribution: 'graalvm-community'
+          components: 'espresso,native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Example step
+        run: |
+          git submodule init
+          git submodule update
+      - name: Example step
+        run: |
+          export JAVA_CLASSPATH=${{ github.workspace }}/oap-server/analyzer/meter-analyzer/target/classes/*
+      - name: Example step
+        run: |
+          mvn -P native clean package
+      - name: Example step
+        run: |
+          cd ${{ github.workspace }}/oap-server/server-starter/target
+          ./server-starter -Dorg.graalvm.home="$GRAALVM_HOME"
+      - name: upload result
+        uses: actions/upload-artifact@v1
+        with:
+          name: my-artifact
+          path: ${{ github.workspace }}/target
