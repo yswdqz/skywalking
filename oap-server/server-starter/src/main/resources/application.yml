@@ -382,7 +382,7 @@ receiver-log:
   default:
 
 query:
-  selector: ${SW_QUERY:-}
+  selector: ${SW_QUERY:graphql}
   graphql:
     # Enable the log testing API to test the LAL.
     # NOTE: This API evaluates untrusted code on the OAP server.
