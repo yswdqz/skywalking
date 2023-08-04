@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 
 import java.util.stream.Stream;
 
-import com.oracle.svm.core.annotate.Substitute;
 import org.apache.skywalking.oap.server.core.UnexpectedException;
 import org.apache.skywalking.oap.server.library.util.NativeImageUtils;
 import org.apache.skywalking.oap.server.library.util.ResourceUtils;

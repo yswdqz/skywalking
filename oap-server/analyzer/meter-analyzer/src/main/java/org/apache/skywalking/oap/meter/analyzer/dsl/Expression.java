@@ -27,6 +27,8 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.skywalking.oap.meter.analyzer.dsl.graal.EspressoMethod;
+import org.apache.skywalking.oap.meter.analyzer.dsl.graal.NativeImageUtils;
 
 /**
  * Expression is a reusable monadic container type which represents a DSL expression.
@@ -73,6 +75,11 @@ public class Expression {
      * @return The result of execution.
      */
     public Result run(final Map<String, SampleFamily> sampleFamilies) {
+
+        if (NativeImageUtils.isNativeImage()) {
+            EspressoMethod.initialize();
+            return EspressoMethod.expressionExecute(sampleFamilies);
+        }
         PROPERTY_REPOSITORY.set(sampleFamilies);
         try {
             SampleFamily sf = (SampleFamily) expression.run();

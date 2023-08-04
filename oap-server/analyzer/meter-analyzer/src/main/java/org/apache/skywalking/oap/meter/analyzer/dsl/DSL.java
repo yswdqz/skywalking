@@ -26,6 +26,8 @@ import java.lang.reflect.Array;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.skywalking.oap.meter.analyzer.dsl.graal.EspressoMethod;
+import org.apache.skywalking.oap.meter.analyzer.dsl.graal.NativeImageUtils;
 import org.apache.skywalking.oap.meter.analyzer.dsl.registry.ProcessRegistry;
 import org.apache.skywalking.oap.meter.analyzer.dsl.tagOpt.K8sRetagType;
 import org.apache.skywalking.oap.server.core.analysis.Layer;
@@ -50,6 +52,11 @@ public final class DSL {
      * @return Expression object could be executed.
      */
     public static Expression parse(final String expression) {
+        if (NativeImageUtils.isNativeImage()) {
+            EspressoMethod.initialize();
+            return EspressoMethod.dslParse(expression);
+
+        }
         CompilerConfiguration cc = new CompilerConfiguration();
         cc.setScriptBaseClass(DelegatingScript.class.getName());
         ImportCustomizer icz = new ImportCustomizer();

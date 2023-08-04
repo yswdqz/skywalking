@@ -33,6 +33,7 @@
         <module>log-analyzer</module>
         <module>meter-analyzer</module>
         <module>event-analyzer</module>
+        <module>analyzer-parser</module>
     </modules>
 
     <dependencies>
@@ -52,4 +53,5 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
+
 </project>
