@@ -23,7 +23,7 @@ jobs:
           export JAVA_CLASSPATH=${{ github.workspace }}/oap-server/analyzer/meter-analyzer/target/classes/*
       - name: Example step
         run: |
-          mvn -P native clean package
+          ./mvnw -P native clean package -Dmaven.test.skip
       - name: Example step
         run: |
           cd ${{ github.workspace }}/oap-server/server-starter/target
